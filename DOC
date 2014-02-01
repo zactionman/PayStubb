@@ -1,0 +1,49 @@
+This file is just a brainstorm for a new app I want to create called PayStubb
+
+Description:
+	The basic idea behind this program is rather simple.
+	The user specifies the number of hours she worked and her payrate.
+	From this PayStubb calculates the gross pay for that period of time.
+	This is so simple that one might ask why even write the program?
+	Well, one of the nice features that is planned to be added is that
+	PayStubb will differentiate between Overtime, Reg time, and Holiday time.
+	Additionally it will be able to add or subtract any off hour premiums (For offshift work).
+	For this reason PayStubb should simplify the calculation of payment over hours worked.
+
+
+Overview:
+	At it's most base level there are few things PayStubb needs to understand.
+	1. Regular pay rate
+	2. Overtime pay rate
+	3. Holiday pay rate
+	4. Any added premiums for off hours work.
+
+	Also, PayStubb needs to be able to take input from the user in relation to
+	total hours of each type worked.  From that it should be able to easily calulate
+	the total pay for a the worked hours.
+
+Class Skeleton:
+
+	App(): This should contain pretty much the whole app.
+
+		__init__(): This should intialize any GUI elements.
+			This will likely also initialize all of the needed variables.
+
+		get(): This will get user input values for/from variables.
+
+		calc(): This will calculate the total pay for the period of time.
+			I'm not sure if this will all be in method... Though I would suspect that this should work.
+
+Implementation:
+	This app will be using the Tkinter module to draw a windowed gui.
+	The window will provide all the entry fileds for number of hours worked.
+	I would like to make a menubar since I have not yet done that in my other applications.
+	Perhaps I should take the time to draw upp a layout of the window.
+
+Update:
+	I would like to make this application be more modular and dynamic by allowing the user to add and remove rows/widgets.
+	Doing this would allow the user to taylor the layout and input/output of the program to her specific situation.
+	This means I need to write a way to create and destroy widgetsat at specific locations. (If this is even possible).
+	Also my program needs to know how to get input from any newly created entry fields.  This would require some sort of
+	special method that knows how to initialize the widget and any associated variables so that the calculate function
+	can use any new added information.
