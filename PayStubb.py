@@ -1,7 +1,6 @@
 # PayStubb - A utility for calculating pay over a specified number of hours.
 # Written by Zach Leinweber
 
-# Initial draft - non-working version.
 
 from Tkinter import *
 from ttk import * 
@@ -9,9 +8,7 @@ from ttk import *
 class App(object):
 
 	def __init__(self, master):
-		# Create variables and UI elements.
-
-		# Start with the top Menu Bar
+		# (1) Initialize menu bar
 		master.option_add('*tearOff', FALSE)
 		menubar = Menu(master)
 		# Make a filemenu... though I'm not sure why.
@@ -21,7 +18,12 @@ class App(object):
 		# Edit Menu
 		editmenu = Menu(menubar)
 		editmenu.add_command(label="Copy", command=self.PlcHldr)
+		editmenu.add_command(label="Preferences", command=self.Prefs)
 		menubar.add_cascade(label="Edit", menu=editmenu)
+		# View Menu
+		viewmenu = Menu(menubar)
+		viewmenu.add_command(label="Showline", command=self.Showlines)
+		menubar.add_cascade(label="View", menu=viewmenu)
 		# Help Menu
 		helpmenu = Menu(menubar)		
 		helpmenu.add_command(label="About", command=self.PlcHldr)
@@ -29,45 +31,91 @@ class App(object):
 		# Add the menu to master toplevel...
 		master['menu'] = menubar
 
-		# Start to initialize vars.
+		# (2) Initialize instance vars
 		# These two lists are used to call Wrk_Inp and Wrk_Out via index points.
 		# This one is for hours
-		self.Wrk_Hrs = ['Reg_Hrs', 'Reg_Hrs2', 'Ovr_Hrs', 'Ovr_Hrs2', 'Hol_Hrs', 'Hol_Hrs2'] 
+		self.Wrk_Hrs = ['Reg_Hrs', 'Reg_Hrs2', 'Ovr_Hrs', 'Ovr_Hrs2',
+			 'Hol_Hrs', 'Hol_Hrs2'] 
 		# This one is for premiums.
-		self.Wrk_Prm = ['Reg_Prm', 'Reg_Prm2', 'Ovr_Prm', 'Ovr_Prm2', 'Hol_Prm', 'Hol_Prm2']
+		self.Wrk_Prm = ['Reg_Prm', 'Reg_Prm2', 'Ovr_Prm', 'Ovr_Prm2',
+			 'Hol_Prm', 'Hol_Prm2']
 		# These two dicts are used to store user input data and then do math on them.
 		# Wrk_Inp stores the variables in the entry fields
 		self.Wrk_Inp = {}
 		# Wrk_Out stores the actual numbers after the Wrk_Inp.get() is called.
 		self.Wrk_Out = {}
+		# This is a placeholder until I actually invent a way to get hourly rates from user.
+		self.wages = [20, 20, 30, 30, 50, 50]
+		# know the row's prevoius state which is importent for hiding/showing rows.
+		self.cstate = [1, 1, 1, 1, 1, 1]
+		# This contains the variables bound to the checkbuttons in the showline in viewmenu
+		# This used to know when the user wants to hide or show a variable.
+		self.rstate = []
+		# This list is used to store the label names when the program starts.
+		# This can be changed later by the user.
+		self.lTypes = ['Regular', 'Regular2', 'Overtime', 'Overtime2', 'Holiday', 'Holiday2']
+		self.Types = []
+		# This sets the initial names for the row labels.
+		for i in range(0, 6):
+			self.Types.append('type')
+			self.Types[i] = StringVar()
+			self.Types[i].set(self.lTypes[i])
+			# Set base wage (default 20 for all)
+			self.wages[i] = DoubleVar()
+			self.wages[i].set(20.0)
+			# Initialize entry variables. These are stored in two dicts.
+			self.Wrk_Inp[self.Wrk_Hrs[i]] = DoubleVar()
+			self.Wrk_Inp[self.Wrk_Prm[i]] = DoubleVar()
+			# This initializes the bound variables for the showline option in viewmenu
+			self.rstate.append('')
+			self.rstate[i] = IntVar()
+			self.rstate[i].set(1)
+
+		# (3) Initialize and draw window body
 		# The body will start off consisting with three frames.  Each with three columns.
-		# I'm not sure how this will change going forward as I would like to implement a way
-		# for the user to add and remove widgets while the app is running.
 		self.frame = Frame(master)
-		self.frame.grid(row=0, column=0)
-		# Each row will be it's own frame (For hiding purposes to be added later)
-		# This tuple is used to store the label names.
-		Types = ('Regular', 'Regular2', 'Overtime', 'Overtime2', 'Holiday', 'Holiday2')
+		self.frame.grid(row=0, column=0, stick=(N,E,S,W))
+		# Create the column labels!
+		col_lbl = Frame(self.frame)
+		col_lbl.grid(row=0, column=0, columnspan=3, padx=10, sticky=(E,W))
+		Label(col_lbl, text="Type", width=10).grid(row=0, column=0, sticky=W)
+		Label(col_lbl, text="Hours", width=15).grid(row=0, column=1)
+		Label(col_lbl, text="Premium", width=8).grid(row=0, column=2, sticky=E)
+		col_lbl.columnconfigure((0,1,2), weight=1)
 		# This list stores all of the content frames.  Each row gets a frame.
 		# I did this so that going forward I could easily make a method to hide and show rows.
 		self.frames = []
 		# This for loop instantiates all of the frames and content that goes in the frame
 		# It also ties the Wrk_Inp dict to the entries via DoubleVar()
 		for i in range(0, 6):
+			# Create each row.
 			self.frames.append('frame')
 			self.frames[i] = Frame(self.frame)
-			self.frames[i].grid(row=i, column=0)
+			self.frames[i].grid(row=(i+1), column=0, columnspan=3, padx=10, sticky=(E,W))
+			# Draw label and two entry widgets for each row.
+			Label(self.frames[i], textvariable=self.Types[i],
+				 width=10).grid(row=0, column=0, sticky=W)
+			Entry(self.frames[i], textvariable=self.Wrk_Inp[self.Wrk_Hrs[i]],
+				 width=15).grid(row=0, column=1)
+			Entry(self.frames[i], textvariable=self. Wrk_Inp[self.Wrk_Prm[i]],
+				 width=8).grid(row=0, column=2, sticky=E)
+			self.frames[i].columnconfigure((0,1,2), weight=1)
 
-			self.Wrk_Inp[self.Wrk_Hrs[i]] = DoubleVar()
-			self.Wrk_Inp[self.Wrk_Prm[i]] = DoubleVar()
 
-			Label(self.frames[i], text=Types[i], width=15).grid(row=0, column=0)
-			Entry(self.frames[i], textvariable=self.Wrk_Inp[self.Wrk_Hrs[i]]).grid(row=0, column=1)
-			Entry(self.frames[i], textvariable=self.Wrk_Inp[self.Wrk_Prm[i]]).grid(row=0, column=2)
-
+		# Text widget for displaying the output of the program.
+		self.text = Text(self.frame, state='disabled', width=40, height=9) 
+		self.text.grid(row=7, column=0, columnspan=3, pady=6, padx=6,
+			 sticky=(N,S,E,W)) 
 		# This button calls the calc function... Though at this point it really just prints the hours.
-		Button(self.frame, text='Print Hours!', command=self.Calc).grid(row=6, column=0)
+		Button(self.frame, text='Calculate!', command=self.Calc).grid(row=8, column=0, pady=12)
 
+		# Resize grip... not that I need it yet since this can't really be reiszed.
+		Sizegrip(master).grid(row=999, column=0, sticky=(S,E))
+		master.columnconfigure(0, weight=4)
+		master.rowconfigure(0, weight=4)
+		self.frame.columnconfigure(0, weight=4)
+		self.frame.rowconfigure(0, weight=2)
+		self.frame.rowconfigure((1,2,3,4,5,6,7,8), weight=1)
 
 	def Get_Input(self):
 		# Get the variables from entry fields.
@@ -75,13 +123,12 @@ class App(object):
 			n = self.Wrk_Hrs.index(Hours)
 			self.Wrk_Out[Hours] = self.Wrk_Inp[Hours].get()
 			self.Wrk_Out[self.Wrk_Prm[n]] = ((self.Wrk_Inp[self.Wrk_Prm[n]].get()) / 100)
+			self.lTypes[n] = self.Types[n].get()
 
 	def Calc(self):
 		# Calculate pay
 		self.Get_Input()
 		print "No Errors"
-		# This is a placeholder until I actually invent a way to get hourly rates from user.
-		wage = [20, 20, 30, 30, 50, 50]
 		# This will hold the pay rates (Wage * Premium)
 		rate = []
 		# This will hold amount payed for each type (Rate * Work Hours)
@@ -89,7 +136,8 @@ class App(object):
 		# This loop populates the rate and payed lists.
 		for i in range(0,6):
 			rate.append('')
-			rate[i] = (wage[i] * self.Wrk_Out[self.Wrk_Prm[i]]) + wage[i]
+			wage = self.wages[i].get()
+			rate[i] = (wage * self.Wrk_Out[self.Wrk_Prm[i]]) + wage
 
 			payed.append('')
 			payed[i] = (rate[i] * self.Wrk_Out[self.Wrk_Hrs[i]]) 
@@ -97,7 +145,58 @@ class App(object):
 		# To calculate total add together all the indices in payed list.
 		for money in payed:
 			total += money
-		print total
+		Ttl_Diag = """For this pay period:
+%s = %d
+%s = %d
+%s = %d
+%s = %d
+%s = %d
+%s = %d
+
+Total = %d""" % (self.lTypes[0], payed[0], self.lTypes[1], payed[1], self.lTypes[2],
+			 payed[2], self.lTypes[3], payed[3], self.lTypes[4], payed[4],
+			 self.lTypes[5], payed[5], total)
+		self.text['state'] = 'normal'
+		self.text.delete(1.0, END)
+		self.text.insert(1.0, Ttl_Diag)
+		self.text['state'] = 'disabled'
+
+	def Showlines(self):
+		# This method is for hiding and showing rows in the application.
+		# Greate the window for the menu
+		View_Lines = Toplevel(root)
+		View_Lines.title('View Lines')
+		# place the checkbutton widgets.
+		x = 0
+		for type in self.Types:
+			name = type.get()
+			Checkbutton(View_Lines, text=name, variable=self.rstate[x],
+			onvalue=1, offvalue=0, command=self.Hide).grid(row=x, column=0)
+			x += 1
+
+	def Hide(self):
+		for state in range(0, 6):
+			new = self.rstate[state].get()
+			if new != self.cstate[state]:
+				self.cstate[state] = new
+				if new == 0:
+					self.frames[state].grid_remove()
+					self.frame.rowconfigure(state+1, weight=0)
+				else:
+					self.frames[state].grid()
+					self.frame.rowconfigure(state+1, weight=1)
+			else:
+				continue
+
+	def Prefs(self):
+		View_Prefs = Toplevel(root)
+		nameframe = Labelframe(View_Prefs, text='Row Names')
+		nameframe.grid(row=0, column=0)
+		wageframe = Labelframe(View_Prefs, text='Wage Rates')
+		wageframe.grid(row=0, column=1)
+		for i in range(0, 6):
+			Entry(nameframe, textvariable=self.Types[i]).grid(row=i, column=0)
+			Entry(wageframe, textvariable=self.wages[i]).grid(row=i, column=0)
 
 	def PlcHldr(self):
 		# This is a dummy Method for testing stuff.
