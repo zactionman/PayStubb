@@ -1,0 +1,8 @@
+PayStubb - A program for calculating pay over time.
+Written in Python and using Tkinter to render the GUI.
+By Zach Leinweber.
+
+V 1.2
+
+For more information on usage check the help page in (Help -> Help)
+(Though, currently this is implemented yet, so it won't do any good)

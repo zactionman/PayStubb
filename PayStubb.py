@@ -1,16 +1,18 @@
+#! /usr/bin/python
 # PayStubb - A utility for calculating pay over a specified number of hours.
 # Written by Zach Leinweber
 
 
 from Tkinter import *
 from ttk import * 
+import tkMessageBox
 
 class App(object):
 
 	def __init__(self, master):
 		# (1) Initialize menu bar
 		master.option_add('*tearOff', FALSE)
-		menubar = Menu(master)
+		menubar = Menu(master, font='TkMenuFont')
 		# Make a filemenu... though I'm not sure why.
 		filemenu = Menu(menubar)
 		filemenu.add_command(label="Save", command=self.PlcHldr)
@@ -18,15 +20,17 @@ class App(object):
 		# Edit Menu
 		editmenu = Menu(menubar)
 		editmenu.add_command(label="Copy", command=self.PlcHldr)
+		editmenu.add_command(label="Clear", command=self.ClearFields)
+		editmenu.add_separator()
 		editmenu.add_command(label="Preferences", command=self.Prefs)
 		menubar.add_cascade(label="Edit", menu=editmenu)
 		# View Menu
 		viewmenu = Menu(menubar)
-		viewmenu.add_command(label="Showline", command=self.Showlines)
+		viewmenu.add_command(label="Toggle Rows", command=self.Showrows)
 		menubar.add_cascade(label="View", menu=viewmenu)
 		# Help Menu
 		helpmenu = Menu(menubar)		
-		helpmenu.add_command(label="About", command=self.PlcHldr)
+		helpmenu.add_command(label="About", command=self.AboutPage)
 		menubar.add_cascade(label="Help", menu=helpmenu)
 		# Add the menu to master toplevel...
 		master['menu'] = menubar
@@ -60,7 +64,7 @@ class App(object):
 			self.Types.append('type')
 			self.Types[i] = StringVar()
 			self.Types[i].set(self.lTypes[i])
-			# Set base wage (default 20 for all)
+			# Set base wage (default 20 for all fields)
 			self.wages[i] = DoubleVar()
 			self.wages[i].set(20.0)
 			# Initialize entry variables. These are stored in two dicts.
@@ -77,21 +81,22 @@ class App(object):
 		self.frame.grid(row=0, column=0, stick=(N,E,S,W))
 		# Create the column labels!
 		col_lbl = Frame(self.frame)
-		col_lbl.grid(row=0, column=0, columnspan=3, padx=10, sticky=(E,W))
-		Label(col_lbl, text="Type", width=10).grid(row=0, column=0, sticky=W)
-		Label(col_lbl, text="Hours", width=15).grid(row=0, column=1)
-		Label(col_lbl, text="Premium", width=8).grid(row=0, column=2, sticky=E)
+		col_lbl.grid(row=0, column=0, columnspan=3, pady=5, padx=10, sticky=(E,W))
+		Label(col_lbl, text="Type", font='TkHeadingFont', width=10).grid(row=0, column=0, sticky=W)
+		Label(col_lbl, text="Hours", font='TkHeadingFont', width=15).grid(row=0, column=1)
+		Label(col_lbl, text="Premium", font='TkHeadingFont', width=8).grid(row=0, column=2, sticky=E)
 		col_lbl.columnconfigure((0,1,2), weight=1)
+		# Create a seperator.
+		Separator(self.frame).grid(row=1, column=0, sticky=(E,W), pady=8, padx=8)
 		# This list stores all of the content frames.  Each row gets a frame.
 		# I did this so that going forward I could easily make a method to hide and show rows.
-		self.frames = []
+		self.frames = [1, 2, 3, 4, 5, 6]
 		# This for loop instantiates all of the frames and content that goes in the frame
 		# It also ties the Wrk_Inp dict to the entries via DoubleVar()
 		for i in range(0, 6):
 			# Create each row.
-			self.frames.append('frame')
 			self.frames[i] = Frame(self.frame)
-			self.frames[i].grid(row=(i+1), column=0, columnspan=3, padx=10, sticky=(E,W))
+			self.frames[i].grid(row=(i+2), column=0, columnspan=3, padx=10, sticky=(E,W))
 			# Draw label and two entry widgets for each row.
 			Label(self.frames[i], textvariable=self.Types[i],
 				 width=10).grid(row=0, column=0, sticky=W)
@@ -100,22 +105,23 @@ class App(object):
 			Entry(self.frames[i], textvariable=self. Wrk_Inp[self.Wrk_Prm[i]],
 				 width=8).grid(row=0, column=2, sticky=E)
 			self.frames[i].columnconfigure((0,1,2), weight=1)
-
-
 		# Text widget for displaying the output of the program.
-		self.text = Text(self.frame, state='disabled', width=40, height=9) 
-		self.text.grid(row=7, column=0, columnspan=3, pady=6, padx=6,
-			 sticky=(N,S,E,W)) 
-		# This button calls the calc function... Though at this point it really just prints the hours.
-		Button(self.frame, text='Calculate!', command=self.Calc).grid(row=8, column=0, pady=12)
-
-		# Resize grip... not that I need it yet since this can't really be reiszed.
+		self.tframe = Labelframe(self.frame, text='Results', padding=(4,8))
+		self.tframe.grid(row=8, column=0, columnspan=3, pady=8, padx=8, sticky=(N,S,E,W))
+		self.text = Text(self.tframe, state='disabled', width=40, height=9) 
+		self.text.grid(row=0, column=0, sticky=(N,S,E,W)) 
+		self.tframe.columnconfigure(0, weight=1)
+		# This button calls the calc function.
+		Button(self.frame, text='Calculate!', command=self.Calc).grid(row=9, column=0, pady=12)
+		# Resize grip. 
 		Sizegrip(master).grid(row=999, column=0, sticky=(S,E))
+
+		# (4) Set window resizing options. (That aren't already set.
 		master.columnconfigure(0, weight=4)
 		master.rowconfigure(0, weight=4)
 		self.frame.columnconfigure(0, weight=4)
 		self.frame.rowconfigure(0, weight=2)
-		self.frame.rowconfigure((1,2,3,4,5,6,7,8), weight=1)
+		self.frame.rowconfigure((2,3,4,5,6,7,8,9), weight=1)
 
 	def Get_Input(self):
 		# Get the variables from entry fields.
@@ -146,14 +152,14 @@ class App(object):
 		for money in payed:
 			total += money
 		Ttl_Diag = """For this pay period:
-%s = %d
-%s = %d
-%s = %d
-%s = %d
-%s = %d
-%s = %d
+%s = %f
+%s = %f
+%s = %f
+%s = %f
+%s = %f
+%s = %f
 
-Total = %d""" % (self.lTypes[0], payed[0], self.lTypes[1], payed[1], self.lTypes[2],
+Total = %F""" % (self.lTypes[0], payed[0], self.lTypes[1], payed[1], self.lTypes[2],
 			 payed[2], self.lTypes[3], payed[3], self.lTypes[4], payed[4],
 			 self.lTypes[5], payed[5], total)
 		self.text['state'] = 'normal'
@@ -161,17 +167,43 @@ Total = %d""" % (self.lTypes[0], payed[0], self.lTypes[1], payed[1], self.lTypes
 		self.text.insert(1.0, Ttl_Diag)
 		self.text['state'] = 'disabled'
 
-	def Showlines(self):
+	def ClearFields(self):
+		answer = tkMessageBox.askokcancel(title='Clear',
+			message='This will clear all input fields', icon='warning')
+		if answer:
+			for input in range(0, 6):
+				self.Wrk_Inp[self.Wrk_Hrs[input]].set(0.0)
+				self.Wrk_Inp[self.Wrk_Prm[input]].set(0.0)
+		else:
+			pass
+
+	def Prefs(self):
+		View_Prefs = Toplevel(root)
+		nameframe = Labelframe(View_Prefs, text='Row Names', padding=(5,10,10,5))
+		nameframe.grid(row=0, column=0)
+		wageframe = Labelframe(View_Prefs, text='Wage Rates', padding=(10,10,5,5))
+		wageframe.grid(row=0, column=1)
+		for i in range(0, 6):
+			Entry(nameframe, textvariable=self.Types[i], 
+				width=12).grid(row=i, column=0)
+			Entry(wageframe, textvariable=self.wages[i],
+				width=8).grid(row=i, column=0)
+
+	def Showrows(self):
 		# This method is for hiding and showing rows in the application.
 		# Greate the window for the menu
 		View_Lines = Toplevel(root)
-		View_Lines.title('View Lines')
+		View_Lines.title('Rows')
+		vlframe = Labelframe(View_Lines, text='Toggle Rows', padding=(8,4,40,4))
+		vlframe.grid(row=0, column=0, sticky=(N,E,S,W), padx=4, pady=(0,4))
+		View_Lines.columnconfigure(0, weight=1); View_Lines.rowconfigure(0, weight=1)
+		vlframe.columnconfigure(0, weight=1)
 		# place the checkbutton widgets.
 		x = 0
 		for type in self.Types:
 			name = type.get()
-			Checkbutton(View_Lines, text=name, variable=self.rstate[x],
-			onvalue=1, offvalue=0, command=self.Hide).grid(row=x, column=0)
+			Checkbutton(vlframe, text=name, variable=self.rstate[x],
+			onvalue=1, offvalue=0, command=self.Hide).grid(row=x, column=0, sticky=(N,S,W))
 			x += 1
 
 	def Hide(self):
@@ -181,26 +213,26 @@ Total = %d""" % (self.lTypes[0], payed[0], self.lTypes[1], payed[1], self.lTypes
 				self.cstate[state] = new
 				if new == 0:
 					self.frames[state].grid_remove()
-					self.frame.rowconfigure(state+1, weight=0)
+					self.frame.rowconfigure(state+2, weight=0)
 				else:
 					self.frames[state].grid()
-					self.frame.rowconfigure(state+1, weight=1)
+					self.frame.rowconfigure(state+2, weight=1)
 			else:
 				continue
 
-	def Prefs(self):
-		View_Prefs = Toplevel(root)
-		nameframe = Labelframe(View_Prefs, text='Row Names')
-		nameframe.grid(row=0, column=0)
-		wageframe = Labelframe(View_Prefs, text='Wage Rates')
-		wageframe.grid(row=0, column=1)
-		for i in range(0, 6):
-			Entry(nameframe, textvariable=self.Types[i]).grid(row=i, column=0)
-			Entry(wageframe, textvariable=self.wages[i]).grid(row=i, column=0)
+	def AboutPage(self):
+		about_file = open('about.txt')
+		about_text = about_file.read()
+		about_file.close()
+		awindow = Toplevel()
+		a_text = Text(awindow, height=15, width=70)
+		a_text.grid(row=0, column=0, sticky=(N,E,S,W))
+		a_text.insert(1.0, about_text)
+		a_text['state'] = 'disabled'
 
 	def PlcHldr(self):
 		# This is a dummy Method for testing stuff.
-		print "This Works! Yay!"
+		print "This Works! Yay! - But not implemented yet."
 
 root = Tk()
 root.wm_title('PayStubb')
