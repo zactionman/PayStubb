@@ -1,13 +1,13 @@
-#! /usr/bin/python
+#! /usr/bin/python3
 # PayStubb - A utility for calculating pay over a specified number of hours.
 # Written by Zach Leinweber
 
 
-from Tkinter import *
-from ttk import * 
-import tkMessageBox
+from tkinter import *
+from tkinter.ttk import * 
+import tkinter.messagebox as messagebox
 
-class App(object):
+class App():
 
     def __init__(self, master):
         # (1) Initialize menu bar
@@ -134,7 +134,7 @@ class App(object):
     def Calc(self):
         # Calculate pay
         self.Get_Input()
-        print "No Errors"
+        print ("No Errors")
         # This will hold the pay rates (Wage * Premium)
         rate = []
         # This will hold amount payed for each type (Rate * Work Hours)
@@ -168,7 +168,7 @@ Total = %F""" % (self.lTypes[0], payed[0], self.lTypes[1], payed[1], self.lTypes
         self.text['state'] = 'disabled'
 
     def ClearFields(self):
-        answer = tkMessageBox.askokcancel(title='Clear',
+        answer = messagebox.askokcancel(title='Clear',
             message='This will clear all input fields', icon='warning')
         if answer:
             for input in range(0, 6):
@@ -232,12 +232,14 @@ Total = %F""" % (self.lTypes[0], payed[0], self.lTypes[1], payed[1], self.lTypes
 
     def PlcHldr(self):
         # This is a dummy Method for testing stuff.
-        print "This Works! Yay! - But not implemented yet."
+        print ("This Works! Yay! - But not implemented yet.")
 
-root = Tk()
-root.wm_title('PayStubb')
 
-app = App(root)
+if __name__ == "__main__":
+    root = Tk()
+    root.wm_title('PayStubb')
 
-root.mainloop()
+    app = App(root)
+
+    root.mainloop()
 
