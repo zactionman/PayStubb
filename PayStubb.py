@@ -152,16 +152,16 @@ class App():
         for money in payed:
             total += money
         Ttl_Diag = """For this pay period:
-%s = %f
-%s = %f
-%s = %f
-%s = %f
-%s = %f
-%s = %f
-
-Total = %F""" % (self.lTypes[0], payed[0], self.lTypes[1], payed[1], self.lTypes[2],
+{:<9s} = {:.2f}
+{:<9s} = {:.2f}
+{:<9s} = {:.2f}
+{:<9s} = {:.2f}
+{:<9s} = {:.2f}
+{:<9s} = {:.2f}
+--------    -------
+{:<9s} = {:.2f}""".format(self.lTypes[0], payed[0], self.lTypes[1], payed[1], self.lTypes[2],
              payed[2], self.lTypes[3], payed[3], self.lTypes[4], payed[4],
-             self.lTypes[5], payed[5], total)
+             self.lTypes[5], payed[5], 'Total', total)
         self.text['state'] = 'normal'
         self.text.delete(1.0, END)
         self.text.insert(1.0, Ttl_Diag)
